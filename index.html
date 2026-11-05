@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مفاجأة</title>
+<style>
+:root{color-scheme:dark;--bg:#06050a;--fg:#f6ecf0;--mut:#a3959e;--acc:#ff4d6d;--card:#15121b;--bd:#2d2735;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:"Noto Naskh Arabic","Amiri",Tahoma,serif}
+body{display:flex;flex-direction:column;overflow:hidden}
+#stage{position:relative;flex:1;min-height:0}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#cap{position:absolute;inset:auto 0 12px 0;text-align:center;padding:0 16px;pointer-events:none}
+#msg{font-size:clamp(24px,6vw,40px);font-weight:700;line-height:1.3;overflow-wrap:anywhere}
+#lbl{color:var(--mut);font-size:15px;margin-top:2px}
+#panel{padding:12px 14px 14px;background:var(--card);border-top:1px solid var(--bd)}
+.row{display:flex;gap:8px;max-width:560px;margin:0 auto}
+input{flex:1;min-width:0;font:inherit;font-size:18px;padding:12px 14px;border-radius:12px;border:1px solid var(--bd);background:#0d0b12;color:var(--fg)}
+input:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+button{font:inherit;cursor:pointer;border:0}
+#go{background:var(--acc);color:#1b0710;font-weight:700;font-size:17px;padding:0 20px;border-radius:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:560px;margin:10px auto 0}
+.chip{background:transparent;color:var(--mut);border:1px solid var(--bd);border-radius:999px;padding:6px 14px;font-size:15px}
+.chip:hover{color:var(--fg);border-color:var(--acc)}
+body.intro{position:relative}
+body.intro #panel{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;background:transparent;border:0;padding:24px;z-index:2}
+body.intro .row{width:100%}
+body.intro .chips,body.intro #cap,body.intro #again{display:none}
+body:not(.intro) #panel{display:none}
+#cap{animation:fi 2s ease 1.4s both}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+#again{position:absolute;top:10px;inset-inline-start:12px;background:none;color:#8a7d92;font-size:24px;z-index:3;opacity:.45}
+</style>
+</head>
+<body class="intro">
+<div id="stage">
+  <canvas id="c"></canvas>
+  <button id="again" aria-label="رجوع">↺</button>
+  <div id="cap"><div id="msg">أحبك</div><div id="lbl">وردة لك 🌹</div></div>
+</div>
+<div id="panel">
+  <div class="row">
+    <input id="inp" dir="auto" maxlength="60" placeholder="اكتب أي شيء…" autocomplete="off">
+    <button id="go">ادخل</button>
+  </div>
+  <div class="chips" id="chips">
+    <button class="chip">I love you</button>
+    <button class="chip">أعشقك</button>
+    <button class="chip">تزوجيني</button>
+    <button class="chip">اشتقت لك</button>
+  </div>
+</div>
+<script>
+(function(){
+var N=4500,R=Math.random,TAU=6.2832;
+function mk(f){var a=new Float32Array(N*7);for(var i=0;i<N;i++)a.set(f(i/N),i*7);return a}
+var shapes={
+heart:mk(function(){var u=R()*TAU,v=Math.acos(2*R()-1),s=Math.sin(v);
+  var x=16*Math.pow(Math.sin(u),3),y=13*Math.cos(u)-5*Math.cos(2*u)-2*Math.cos(3*u)-Math.cos(4*u);
+  return[x*s/17,(y*s+2.5)/17,Math.cos(v)*.45,255,35+R()*45,80+R()*45,.45+.55*R()]}),
+ring:mk(function(q){
+  if(q<.55){var t=R()*TAU,p=R()*TAU,rr=.7+.1*Math.cos(p);
+    return[rr*Math.cos(t),rr*Math.sin(t)-.1,.1*Math.sin(p)*1.5,255,195+R()*35,90+R()*40,.5+.5*R()]}
+  var t2=R(),a=R()*TAU,up=R()<.5,k=Math.cos(Math.PI/8)/Math.cos(a%(Math.PI/4)-Math.PI/8);
+  var rad=(up?.3-.15*t2:.3*(1-t2))*k;
+  return[rad*Math.cos(a),up?.8+.16*t2:.8-.22*t2,rad*Math.sin(a),205+R()*50,230+R()*25,255,.75+.25*R()]}),
+rose:mk(function(q){
+  if(q<.62){var k=Math.floor(R()*5),Rk=.2+.1*k,th=R()*TAU,ph=.35+R()*1.8,rr=Rk*(1+.16*Math.sin(5*th+1.7*k));
+    return[rr*Math.sin(ph)*Math.cos(th),.35+rr*Math.cos(ph)*1.1,rr*Math.sin(ph)*Math.sin(th),150+k*22+R()*30,10+R()*25,25+R()*25,.45+.55*R()]}
+  if(q<.9){var y=.1-R()*1.1;return[.04*Math.sin(y*3)+(R()-.5)*.03,y,(R()-.5)*.03,40,170+R()*60,70,.5+.5*R()]}
+  var sd=R()<.5?-1:1,t=R(),w=Math.sin(Math.PI*t)*.1,b=sd<0?-.35:-.6;
+  return[sd*(.04+.34*t),b+.25*t+(R()-.5)*w*.5,(R()-.5)*w*2,40,150+R()*80,70,.5+.5*R()]})
+};
+var info={rose:'وردة لك 🌹',heart:'قلبي لك ❤️',ring:'خاتم لك 💍'};
+function norm(s){return s.toLowerCase().replace(/[\u064B-\u0652\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه')}
+function pick(s){s=norm(s);
+  if(/تزوج|marry|زواج|خاتم|ring|wife|engage|خطوب/.test(s))return'ring';
+  if(/احب|اعشق|عشق|love|ورد|rose|بحب|يحب/.test(s))return'rose';
+  return'heart'}
+var cv=document.getElementById('c'),ctx=cv.getContext('2d'),W=0,H=0,cw=7,chh=12,cols=0,rows=0,fs=12,dpr=1;
+var zb,chi,rgb,stars=[],intro=true;
+function scatter(){var a=new Float32Array(N*7);for(var i=0;i<N;i++){var o=i*7;a[o]=(R()-.5)*3;a[o+1]=(R()-.5)*3;a[o+2]=(R()-.5)*3;a[o+3]=a[o+4]=a[o+5]=255;a[o+6]=.15*R()}return a}
+var RAMP='.,:;+*#%@';
+var from=shapes.rose,to=shapes.rose,cur=new Float32Array(N*7),mt0=-9999;
+cur.set(to);
+function resize(){var r=cv.getBoundingClientRect();dpr=window.devicePixelRatio||1;W=r.width;H=r.height;
+  cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+  fs=W<600?11:13;ctx.font=fs+'px ui-monospace,Menlo,Consolas,monospace';
+  cw=ctx.measureText('M').width;chh=fs*1.05;cols=Math.ceil(W/cw);rows=Math.ceil(H/chh);
+  zb=new Float32Array(cols*rows);chi=new Int8Array(cols*rows);rgb=new Uint8Array(cols*rows*3);
+  stars=[];for(var i=0;i<90;i++)stars.push({c:R()*cols|0,r:R()*rows|0,p:R()*TAU,s:.6+R()*1.6,h:'·+*'[R()*3|0]})}
+function show(name){from.set?0:0;var f=new Float32Array(cur);from=f;to=shapes[name];mt0=performance.now()}
+function frame(ts){
+  var m=Math.min(1,(ts-mt0)/2200);m=m*m*(3-2*m);var t=ts/1000;
+  ctx.clearRect(0,0,W,H);if(intro){requestAnimationFrame(frame);return}ctx.font=fs+'px ui-monospace,Menlo,Consolas,monospace';ctx.textBaseline='top';
+  zb.fill(-9);chi.fill(-1);
+  var ang=t*.7,ca=Math.cos(ang),sa=Math.sin(ang),tl=.2,ct=Math.cos(tl),st=Math.sin(tl),sc=Math.min(W,H*.9)*.46;
+  var i,j,o,x,y,z,x1,z1,y1,z2,pe,sx,sy,c,r,idx,b,f,n7=N*7;
+  for(i=0;i<n7;i++)cur[i]=from[i]+(to[i]-from[i])*m;
+  for(i=0;i<N;i++){o=i*7;x=cur[o];y=cur[o+1];z=cur[o+2];
+    x1=x*ca+z*sa;z1=-x*sa+z*ca;y1=y*ct-z1*st;z2=y*st+z1*ct;
+    pe=3/(3-z2);sx=W/2+x1*sc*pe;sy=H/2-y1*sc*pe;
+    c=Math.floor(sx/cw);r=Math.floor(sy/chh);if(c<0||r<0||c>=cols||r>=rows)continue;
+    j=r*cols+c;if(z2<=zb[j])continue;zb[j]=z2;
+    b=cur[o+6]*(.55+.45*(z2+.8)/1.6);b=b<0?0:b>.999?.999:b;chi[j]=Math.floor(b*9);f=.4+.6*b;
+    rgb[j*3]=cur[o+3]*f;rgb[j*3+1]=cur[o+4]*f;rgb[j*3+2]=cur[o+5]*f}
+  for(i=0;i<stars.length;i++){var s=stars[i];if(chi[s.r*cols+s.c]>=0)continue;
+    ctx.globalAlpha=.25+.6*Math.abs(Math.sin(t*s.s+s.p));ctx.fillStyle='#fff';ctx.fillText(s.h,s.c*cw,s.r*chh)}
+  ctx.globalAlpha=1;
+  for(r=0;r<rows;r++)for(c=0;c<cols;c++){j=r*cols+c;idx=chi[j];if(idx<0)continue;
+    ctx.fillStyle='rgb('+rgb[j*3]+','+rgb[j*3+1]+','+rgb[j*3+2]+')';ctx.fillText(RAMP[idx],c*cw,r*chh)}
+  requestAnimationFrame(frame)}
+var inp=document.getElementById('inp'),msg=document.getElementById('msg'),lbl=document.getElementById('lbl');
+function reveal(txt){txt=(txt||'').trim();if(!txt)return;var k=pick(txt);msg.textContent=txt;lbl.textContent=info[k];
+  if(intro){intro=false;document.body.classList.remove('intro');cur.set(scatter())}
+  show(k)}
+document.getElementById('go').addEventListener('click',function(){reveal(inp.value)});
+inp.addEventListener('keydown',function(e){if(e.key==='Enter')reveal(inp.value)});
+document.getElementById('chips').addEventListener('click',function(e){var b=e.target.closest('.chip');if(b){inp.value=b.textContent;reveal(b.textContent)}});
+document.getElementById('again').addEventListener('click',function(){intro=true;document.body.classList.add('intro');inp.value='';inp.focus()});
+new ResizeObserver(resize).observe(document.getElementById('stage'));
+resize();requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
